@@ -1,0 +1,7 @@
+{
+  "name": "ggbao-tactics",
+  "version": "1.0.0",
+  "description": "GGBAO 战队教练战术板（共享版：教练编辑、全队实时可见）",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=14" }
+}

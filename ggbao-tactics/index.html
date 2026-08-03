@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GGBAO 战队 · 教练战术板</title>
+<style>
+  :root{
+    --bg:#0a1428; --panel:#16223a; --panel2:#1f2e4a; --line:#2c3e5e;
+    --gold:#c8aa6e; --teal:#0ac8b9; --red:#e84057; --blue:#0a91e0;
+    --text:#e6e9ef; --muted:#8b97a8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:radial-gradient(1200px 700px at 50% -10%,#15243f 0%,var(--bg) 60%);
+    color:var(--text); font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; padding:14px; max-width:920px; margin:0 auto}
+  header{display:flex; align-items:center; gap:12px; margin-bottom:14px}
+  .logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#8a6d3b);
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#1a1304;font-size:18px}
+  h1{font-size:20px;margin:0;letter-spacing:1px}
+  h1 b{color:var(--gold)}
+  .tag{font-size:11px;color:var(--muted);background:var(--panel2);padding:3px 8px;border-radius:20px;border:1px solid var(--line)}
+
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+    cursor:pointer;font-weight:600;color:var(--muted);transition:.15s}
+  .tab.active{background:linear-gradient(135deg,var(--gold),#9c7c44);color:#1a1304;border-color:var(--gold)}
+
+  /* 峡谷战术板 */
+  .board{position:relative;width:100%;aspect-ratio:1/1;background:
+      radial-gradient(circle at 50% 50%,#13351f 0%,#0c2417 70%),
+      repeating-linear-gradient(45deg,rgba(255,255,255,.02) 0 10px,transparent 10px 20px);
+    border:2px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:16px}
+  .board svg{position:absolute;inset:0;width:100%;height:100%}
+  .spot{position:absolute;transform:translate(-50%,-50%);width:66px;text-align:center;cursor:pointer}
+  .spot .circle{width:52px;height:52px;border-radius:50%;border:2px solid var(--gold);background:rgba(10,20,40,.8);
+    margin:0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:11px;color:var(--muted);transition:.15s}
+  .spot .circle:hover{border-color:var(--teal);box-shadow:0 0 12px rgba(10,200,185,.5)}
+  .spot .circle img{width:100%;height:100%;object-fit:cover}
+  .spot .role{font-size:10px;color:var(--gold);margin-top:3px;font-weight:700;text-shadow:0 1px 3px #000}
+  .spot .pn{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:66px}
+
+  /* 选手池 */
+  .pool{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:16px}
+  .pool h3{margin:0 0 10px;font-size:13px;color:var(--gold);display:flex;align-items:center;gap:8px}
+  .pool h3 .cnt{font-size:11px;color:var(--muted);font-weight:400}
+  .pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .pcard{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;position:relative}
+  .pcard .pn{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px}
+  .pcard .pn .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .pcard .pn .dot.in{background:var(--teal)}
+  .pcard .heroes{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+  .hchip{display:flex;align-items:center;gap:3px;background:#0d1830;border:1px solid var(--line);border-radius:14px;padding:2px 6px 2px 2px;font-size:10px;color:var(--text)}
+  .hchip img{width:18px;height:18px;border-radius:50%;object-fit:cover}
+  .pcard .assign{margin-top:4px;width:100%;background:transparent;border:1px solid var(--line);color:var(--teal);
+    border-radius:8px;padding:6px;font-size:12px;cursor:pointer}
+  .pcard .assign:hover{border-color:var(--teal);background:rgba(10,200,185,.08)}
+  .pcard .loc{position:absolute;top:8px;right:8px;font-size:10px;color:var(--teal)}
+
+  /* 选手战术卡 */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.cards{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px;position:relative}
+  .card.empty{cursor:pointer;border-style:dashed}
+  .card.empty .empty-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);min-height:120px;font-size:14px}
+  .card.empty:hover{border-color:var(--teal)}
+  .card .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .ava{width:46px;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;color:var(--muted);flex:none}
+  .ava img{width:100%;height:100%;object-fit:cover}
+  .card .role{font-size:11px;color:var(--gold);font-weight:700}
+  .card .pname{font-size:15px;font-weight:700;color:var(--text)}
+  .mini-btns{margin-left:auto;display:flex;gap:6px}
+  .champ-btn{background:var(--panel2);border:1px solid var(--line);color:var(--teal);border-radius:8px;padding:6px 9px;font-size:11px;cursor:pointer}
+  .champ-btn:hover{border-color:var(--teal)}
+  .swap-btn{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 9px;font-size:11px;cursor:pointer}
+  .swap-btn:hover{border-color:var(--gold);color:var(--gold)}
+  .champ-name{font-size:13px;color:var(--text);margin:2px 0 8px}
+  .champ-name.empty{color:var(--muted)}
+  .heroes{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+  label.fld{font-size:11px;color:var(--muted);display:block;margin:8px 0 4px}
+  .items{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+  .item{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:6px;background:var(--panel2);
+    font-size:10px;color:var(--muted);display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:2px;outline:none;word-break:break-all;cursor:text}
+  .item:focus{border-color:var(--teal);color:var(--text)}
+  textarea.note{width:100%;min-height:54px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    color:var(--text);padding:8px;font-size:12px;resize:vertical;outline:none;font-family:inherit}
+  textarea.note:focus{border-color:var(--teal)}
+  .sub-card{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+  .del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px}
+  .del:hover{color:var(--red)}
+
+  .subs{margin-top:14px}
+  .add-sub{width:100%;padding:10px;background:transparent;border:1px dashed var(--line);color:var(--muted);
+    border-radius:10px;cursor:pointer;font-size:13px}
+  .add-sub:hover{color:var(--teal);border-color:var(--teal)}
+
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 30px}
+  .btn{background:var(--gold);color:#1a1304;border:none;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .btn.ghost:hover{color:var(--text);border-color:var(--teal)}
+
+  /* 弹窗 */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+  .mask[hidden]{display:none!important}
+  .picker{width:100%;max-width:680px;max-height:86vh;background:linear-gradient(180deg,#10203c,#0c1830);
+    border:1px solid var(--gold);border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+  .picker .ph{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .picker .ph .t{font-weight:800;color:var(--gold);letter-spacing:1px}
+  .picker .ph .src{font-size:11px;color:var(--muted)}
+  .picker input.search{margin-left:auto;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:8px 10px;width:150px;outline:none}
+  .picker input.search:focus{border-color:var(--teal)}
+  .grid-champ{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;padding:14px;overflow-y:auto}
+  .champ{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;cursor:pointer;transition:.12s}
+  .champ:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .champ img{width:48px;height:48px;border-radius:8px;object-fit:cover;background:#0a1428}
+  .champ .cn{font-size:11px;margin-top:4px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .champ .empty-ava{width:48px;height:48px;border-radius:8px;background:#0a1428;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;margin:0 auto}
+  .closex{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;margin-left:6px}
+  .hint{font-size:11px;color:var(--muted);padding:0 16px 10px}
+
+  /* 选选手弹窗 */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:14px;overflow-y:auto}
+  .pitem{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;transition:.12s}
+  .pitem:hover{border-color:var(--gold);transform:translateY(-2px)}
+  .pitem .pn{font-weight:700;font-size:14px}
+  .pitem .tagloc{font-size:10px;color:var(--teal);margin-top:2px;min-height:12px}
+  .pitem .heroes{margin-top:6px}
+
+  /* 分配弹窗 */
+  .assign-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px}
+  .abtn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:16px;
+    font-size:15px;font-weight:700;cursor:pointer;text-align:center}
+  .abtn:hover{border-color:var(--gold);color:var(--gold)}
+  .abtn.sub{background:rgba(10,200,185,.08);border-color:var(--teal);color:var(--teal)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">GG</div>
+  <div>
+    <h1><b>GGBAO</b> 战队 · 教练战术板</h1>
+    <div class="tag" id="saveTag">数据自动保存在本机</div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" id="tabStarter">首发阵容</div>
+  <div class="tab" id="tabSub">替补席</div>
+</div>
+
+<!-- 峡谷战术板 -->
+<div class="board" id="board">
+  <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+    <path d="M16 84 L16 16 L84 16" fill="none" stroke="rgba(200,170,110,.35)" stroke-width="1.4"/>
+    <path d="M16 84 L84 84 L84 16" fill="none" stroke="rgba(200,170,110,.35)" stroke-width="1.4"/>
+    <line x1="16" y1="84" x2="84" y2="16" stroke="rgba(10,200,185,.45)" stroke-width="1.4"/>
+    <line x1="20" y1="34" x2="80" y2="66" stroke="rgba(10,145,224,.4)" stroke-width="2.2" stroke-dasharray="3 2"/>
+    <circle cx="16" cy="84" r="7" fill="rgba(10,145,224,.35)" stroke="var(--blue)" stroke-width="1"/>
+    <circle cx="84" cy="16" r="7" fill="rgba(232,64,87,.35)" stroke="var(--red)" stroke-width="1"/>
+  </svg>
+</div>
+
+<!-- 选手池 -->
+<div class="pool">
+  <h3>选手池 <span class="cnt" id="poolCnt"></span></h3>
+  <div class="pcards" id="poolCards"></div>
+</div>
+
+<!-- 战术卡 -->
+<div id="cardsWrap"></div>
+<div class="subs" id="subsWrap" hidden>
+  <div id="subsList"></div>
+  <button class="add-sub" id="addSub">+ 添加替补选手</button>
+</div>
+
+<div class="actions">
+  <button class="btn" id="btnExport">导出阵容 JSON</button>
+  <button class="btn ghost" id="btnImport">导入阵容</button>
+  <button class="btn ghost" id="btnReset">清空重来</button>
+  <input type="file" id="fileInput" accept="application/json" hidden />
+</div>
+
+<!-- 选英雄(BP)弹窗 -->
+<div class="mask" id="pickMask" hidden>
+  <div class="picker">
+    <div class="ph">
+      <span class="t">⚔ 选择英雄</span>
+      <span class="src">为 <b id="pickRoleName" style="color:var(--teal)"></b></span>
+      <input class="search" id="champSearch" placeholder="搜索英雄…" />
+      <button class="closex" id="pickClose">×</button>
+    </div>
+    <div class="hint">点击英雄头像即可填入（头像来自 Riot Data Dragon 官方 CDN）</div>
+    <div class="grid-champ" id="champGrid"></div>
+  </div>
+</div>
+
+<!-- 选选手弹窗 -->
+<div class="mask" id="playerMask" hidden>
+  <div class="picker">
+    <div class="ph">
+      <span class="t">👤 选择选手</span>
+      <span class="src">分配到 <b id="playerTargetName" style="color:var(--teal)"></b></span>
+      <button class="closex" id="playerClose">×</button>
+    </div>
+    <div class="hint">已在他处的选手会被自动移过去（一名选手同一场只能占一个位置）</div>
+    <div class="pgrid" id="playerGrid"></div>
+  </div>
+</div>
+
+<!-- 分配目标弹窗（从选手池分配） -->
+<div class="mask" id="assignMask" hidden>
+  <div class="picker" style="max-width:420px">
+    <div class="ph">
+      <span class="t">📍 分配到</span>
+      <span class="src" id="assignName"></span>
+      <button class="closex" id="assignClose">×</button>
+    </div>
+    <div class="assign-btns">
+      <div class="abtn" data-r="top">上单</div>
+      <div class="abtn" data-r="jug">打野</div>
+      <div class="abtn" data-r="mid">中单</div>
+      <div class="abtn" data-r="adc">射手</div>
+      <div class="abtn" data-r="sup">辅助</div>
+      <div class="abtn sub" data-r="sub">替补席</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ 英雄数据（en -> 中文短名，头像来自 Data Dragon CDN） ============ */
+const DDRAGON = "https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/";
+const HERO = {
+  Garen:"盖伦",Riven:"锐雯",Darius:"诺手",Jayce:"杰斯",Camille:"青钢影",Renekton:"鳄鱼",
+  Fiora:"剑姬",Olaf:"奥拉夫",DrMundo:"蒙多",Maokai:"大树",Shen:"慎",Irelia:"刀妹",
+  Jax:"武器大师",Nasus:"狗头",Sett:"腕豪",Aatrox:"剑魔",Ornn:"奥恩",KSante:"奎桑提",Kennen:"凯南",
+  LeeSin:"盲僧",JarvanIV:"皇子",Khazix:"螳螂",Elise:"蜘蛛",RekSai:"挖掘机",Nidalee:"豹女",
+  Evelynn:"寡妇",Sejuani:"猪妹",Shyvana:"龙女",Vi:"蔚",Graves:"男枪",Kayn:"凯隐",
+  Lillia:"莉莉娅",Zac:"扎克",Amumu:"木木",Rammus:"龙龟",Warwick:"狼人",Nunu:"努努",
+  Viego:"佛耶戈",XinZhao:"赵信",Kindred:"千珏",Hecarim:"人马",Fiddlesticks:"末日",
+  Yasuo:"亚索",Zed:"劫",Leblanc:"妖姬",Syndra:"辛德拉",Orianna:"发条",Ryze:"瑞兹",
+  Viktor:"维克托",TwistedFate:"卡牌",Fizz:"小鱼人",Talon:"男刀",Ahri:"狐狸",Lux:"拉克丝",
+  Ziggs:"炸弹人",Karthus:"死歌",Lissandra:"冰女",Galio:"加里奥",Akali:"阿卡丽",Yone:"永恩",
+  Sylas:"塞拉斯",Qiyana:"琪亚娜",Zoe:"佐伊",Ekko:"艾克",Annie:"安妮",Cassiopeia:"蛇女",
+  Veigar:"小法",Malzahar:"马尔扎哈",Hwei:"彗",Quinn:"奎因",
+  Ashe:"寒冰",Vayne:"薇恩",KaiSa:"卡莎",Jhin:"烬",Jinx:"金克丝",Caitlyn:"女警",
+  Lucian:"奥巴马",Ezreal:"EZ",MissFortune:"女枪",Varus:"韦鲁斯",KogMaw:"大嘴",
+  Kalista:"滑板鞋",Tristana:"小炮",Sivir:"轮子妈",Xayah:"霞",Draven:"德莱文",
+  Aphelios:"厄斐琉斯",Samira:"莎弥拉",Zeri:"泽丽",Corki:"飞机",Senna:"赛娜",
+  Thresh:"锤石",Blitzcrank:"机器人",Lulu:"璐璐",Soraka:"奶妈",Alistar:"牛头",
+  Janna:"风女",Nami:"娜美",Karma:"扇子妈",Zyra:"婕拉",Morgana:"莫甘娜",Leona:"蕾欧娜",
+  Pyke:"派克",Yuumi:"猫咪",Bard:"巴德",TahmKench:"塔姆",Nautilus:"泰坦",Rakan:"洛",Taric:"宝石"
+};
+const ADC_LIST = ["Ashe","Vayne","KaiSa","Jhin","Jinx","Caitlyn","Lucian","Ezreal","MissFortune",
+  "Varus","KogMaw","Kalista","Tristana","Sivir","Xayah","Draven","Aphelios","Samira","Zeri","Corki","Senna"];
+function hcn(en){ return HERO[en]||en; }
+function champAva(en){
+  if(!en) return '<span class="empty-ava">?</span>';
+  return `<img src="${DDRAGON}${en}.png" alt="" onerror="this.outerHTML='<span class=empty-ava>'+'${hcn(en)[0]}'+</span>'">`;
+}
+
+/* ============ 选手池（预设：GGBAO 阵容 + 拿手英雄） ============ */
+const PRESET_PLAYERS = [
+  {name:"叶栋", heroes:["Annie","Thresh"]},
+  {name:"鲍晔", heroes:["Camille","Leblanc","MissFortune"]},
+  {name:"MRC", heroes:["Kennen","Quinn","Tristana"]},
+  {name:"韩厅", heroes:["Hwei"]},
+  {name:"葛文杰", heroes:["JarvanIV","Khazix","Fiddlesticks","Hecarim","Kayn"]},
+  {name:"姚罗顺", heroes:["TahmKench","KSante","DrMundo"]},
+  {name:"外援jackylove", heroes: ADC_LIST},
+  {name:"780", heroes:["Pyke"]},
+  {name:"董徐", heroes:["Malzahar","TwistedFate","Veigar"]},
+  {name:"那个男人", heroes:["Olaf"]},
+];
+
+/* ============ 数据模型 ============ */
+const ROLES = [
+  {key:"top",name:"上单",x:16,y:14},
+  {key:"jug",name:"打野",x:33,y:40},
+  {key:"mid",name:"中单",x:50,y:50},
+  {key:"adc",name:"射手",x:84,y:86},
+  {key:"sup",name:"辅助",x:86,y:70},
+];
+const ROLE_KEYS = ROLES.map(r=>r.key);
+const roleName = k => (ROLES.find(r=>r.key===k)||{}).name || k;
+function emptySlot(){ return {pi:null,champ:null,items:["","","","","",""],note:""}; }
+function defaultState(){
+  const s={ players: PRESET_PLAYERS.map(p=>({name:p.name,heroes:[...p.heroes]})), subs:[] };
+  s.starter={}; ROLES.forEach(r=> s.starter[r.key]=emptySlot());
+  return s;
+}
+
+const LS_KEY = "ggbao_tactics_v2";
+let state = load();
+let currentTeam = "starter";
+let pickTarget = null;      // {type:'starter'|'sub', key/index}
+let assignPendingPi = null; // 从选手池分配时暂存
+
+function load(){
+  try{ const s=JSON.parse(localStorage.getItem(LS_KEY)); if(s&&s.starter) return mergeDefaults(s); }catch(e){}
+  return defaultState();
+}
+function mergeDefaults(s){
+  const out=defaultState();
+  if(Array.isArray(s.players)&&s.players.length) out.players=s.players;
+  ROLES.forEach(r=>{ if(s.starter&&s.starter[r.key]) out.starter[r.key]={...emptySlot(),...s.starter[r.key]}; });
+  if(Array.isArray(s.subs)) out.subs=s.subs;
+  return out;
+}
+/* ============ 云端同步（部署后教练编辑、全队实时可见） ============ */
+let cloudTimer=null, lastSig='';
+const LINEUP_API='/api/lineup';
+function sig(s){ return JSON.stringify(s); }
+function save(){ localStorage.setItem(LS_KEY,JSON.stringify(state)); flashTag('已保存'); scheduleCloud(); }
+function flashTag(txt){ document.getElementById('saveTag').textContent=(txt||"✓ 已保存")+" "+new Date().toLocaleTimeString(); }
+function scheduleCloud(){ if(!navigator.onLine) return; clearTimeout(cloudTimer); cloudTimer=setTimeout(cloudSave,600); }
+async function cloudSave(){
+  lastSig=sig(state);
+  try{ await fetch(LINEUP_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)}); }catch(e){}
+}
+async function cloudLoad(){
+  try{
+    const r=await fetch(LINEUP_API); const d=await r.json();
+    if(d && !d.empty && d.starter){ state=mergeDefaults(d); lastSig=sig(state); localStorage.setItem(LS_KEY,JSON.stringify(state)); renderAll(); flashTag('已同步云端'); }
+  }catch(e){}
+}
+async function poll(){
+  try{
+    const r=await fetch(LINEUP_API); const d=await r.json();
+    if(d && !d.empty && d.starter){ const s=sig(d); if(s!==lastSig){ state=mergeDefaults(d); lastSig=s; localStorage.setItem(LS_KEY,JSON.stringify(state)); renderAll(); flashTag('已同步云端'); } }
+  }catch(e){}
+}
+
+/* ============ 选手定位查询 ============ */
+function findLoc(pi){
+  for(const k of ROLE_KEYS){ if(state.starter[k].pi===pi) return "首发·"+roleName(k); }
+  const i=state.subs.findIndex(s=>s.pi===pi);
+  if(i>=0) return "替补";
+  return null;
+}
+function removePlayerEverywhere(pi){
+  ROLES.forEach(r=>{ if(state.starter[r.key].pi===pi) state.starter[r.key].pi=null; });
+  state.subs = state.subs.filter(s=>s.pi!==pi);
+}
+
+/* ============ 渲染：峡谷 ============ */
+function renderBoard(){
+  const board=document.getElementById('board');
+  board.querySelectorAll('.spot').forEach(s=>s.remove());
+  ROLES.forEach(r=>{
+    const d=state.starter[r.key];
+    const spot=document.createElement('div');
+    spot.className='spot'; spot.style.left=r.x+'%'; spot.style.top=r.y+'%';
+    let inner;
+    if(d.pi!=null){
+      const pl=state.players[d.pi];
+      inner = d.champ ? champAva(d.champ)
+                      : `<span style="font-size:13px;font-weight:700">${esc(pl.name[0])}</span>`;
+      spot.innerHTML=`<div class="circle">${inner}</div><div class="role">${r.name}</div>
+        <div class="pn">${esc(pl.name)}</div>`;
+    } else {
+      spot.innerHTML=`<div class="circle">+</div><div class="role">${r.name}</div>
+        <div class="pn" style="color:var(--muted)">空位</div>`;
+    }
+    spot.onclick=()=>openPickPlayer('starter',r.key,r.name);
+    board.appendChild(spot);
+  });
+}
+
+/* ============ 渲染：选手池 ============ */
+function renderPool(){
+  document.getElementById('poolCnt').textContent = "（"+state.players.length+" 人）";
+  const wrap=document.getElementById('poolCards'); wrap.innerHTML='';
+  state.players.forEach((pl,pi)=>{
+    const loc=findLoc(pi);
+    const card=document.createElement('div'); card.className='pcard';
+    const heroesHtml = pl.heroes.length>8
+      ? `<span class="hchip" style="padding:2px 8px">拿手：全 ADC（${pl.heroes.length}）</span>`
+      : pl.heroes.map(h=>`<span class="hchip">${champAva(h)}${hcn(h)}</span>`).join('');
+    card.innerHTML=`
+      ${loc?`<div class="loc">${loc}</div>`:''}
+      <div class="pn"><span class="dot ${loc?'in':''}"></span>${esc(pl.name)}</div>
+      <div class="heroes">${heroesHtml}</div>
+      <button class="assign">分配到位置 ▾</button>`;
+    card.querySelector('.assign').onclick=()=>openAssign(pi);
+    wrap.appendChild(card);
+  });
+}
+
+/* ============ 渲染：战术卡 ============ */
+function renderCards(){
+  const wrap=document.getElementById('cardsWrap'); wrap.innerHTML='';
+  if(currentTeam==='starter'){
+    const grid=document.createElement('div'); grid.className='cards';
+    ROLES.forEach(r=> grid.appendChild(buildStarterCard(r.key,r.name)));
+    wrap.appendChild(grid);
+  } else {
+    renderSubs();
+  }
+}
+function heroChipsHtml(heroes,type,key){
+  if(!heroes||heroes.length===0) return '';
+  if(heroes.length>8) return `<span class="hchip" style="padding:2px 8px">拿手：全 ADC（${heroes.length}）</span>`;
+  return heroes.map(h=>`<span class="hchip" style="cursor:pointer" data-h="${h}">${champAva(h)}${hcn(h)}</span>`).join('');
+}
+function bindChips(card,type,key){
+  card.querySelectorAll('.hchip[data-h]').forEach(c=>{
+    c.onclick=()=>{ const h=c.dataset.h; setChamp(type,key,h); };
+  });
+}
+function buildStarterCard(key,roleName){
+  const d=state.starter[key];
+  const card=document.createElement('div');
+  if(d.pi==null){
+    card.className='card empty';
+    card.innerHTML=`<div class="empty-btn"><div style="font-size:28px">＋</div><div>点击分配选手到「${roleName}」</div></div>`;
+    card.onclick=()=>openPickPlayer('starter',key,roleName);
+    return card;
+  }
+  const pl=state.players[d.pi];
+  card.className='card';
+  const champCn = d.champ?hcn(d.champ):'点击选择英雄';
+  card.innerHTML=`
+    <div class="top">
+      <div class="ava">${champAva(d.champ)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="role">${roleName}</div>
+        <div class="pname">${esc(pl.name)}</div>
+      </div>
+      <div class="mini-btns">
+        <button class="swap-btn">换人</button>
+        <button class="champ-btn">选英雄</button>
+      </div>
+    </div>
+    <div class="champ-name ${d.champ?'':'empty'}">出战：${champCn}</div>
+    <div class="heroes" id="chips_${key}">${heroChipsHtml(pl.heroes,'starter',key)}</div>
+    <label class="fld">出装（6 格）</label>
+    <div class="items">
+      ${d.items.map((it,i)=>`<div class="item" contenteditable="true" data-i="${i}">${esc(it)}</div>`).join('')}
+    </div>
+    <label class="fld">战术思路</label>
+    <textarea class="note" placeholder="如：前期稳住，6 级找机会 gank 下路…">${esc(d.note)}</textarea>`;
+  card.querySelector('.swap-btn').onclick=e=>{ e.stopPropagation(); openPickPlayer('starter',key,roleName); };
+  card.querySelector('.champ-btn').onclick=e=>{ e.stopPropagation(); openPickChamp('starter',key,roleName); };
+  bindChips(card,'starter',key);
+  card.querySelectorAll('.item').forEach(el=>{ el.oninput=()=>{ d.items[+el.dataset.i]=el.innerText; save(); }; });
+  card.querySelector('.note').oninput=e=>{ d.note=e.target.value; save(); };
+  return card;
+}
+
+/* ============ 替补 ============ */
+function renderSubs(){
+  const list=document.getElementById('subsList'); list.innerHTML='';
+  state.subs.forEach((s,i)=>{
+    const card=document.createElement('div'); card.className='sub-card'; card.style.position='relative';
+    const pl = s.pi!=null ? state.players[s.pi] : null;
+    const champCn = s.champ?hcn(s.champ):'点击选择英雄';
+    const heroes = pl?pl.heroes:[];
+    card.innerHTML=`
+      <button class="del" title="移除">×</button>
+      <div class="top">
+        <div class="ava">${champAva(s.champ)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="role">替补${s.tag?(' · '+esc(s.tag)):''}</div>
+          <div class="pname">${pl?esc(pl.name):'<span style="color:var(--muted);font-weight:400">未分配选手</span>'}</div>
+        </div>
+        <div class="mini-btns">
+          <button class="swap-btn">换人</button>
+          <button class="champ-btn">选英雄</button>
+        </div>
+      </div>
+      <div class="champ-name ${s.champ?'':'empty'}">出战：${champCn}</div>
+      <div class="heroes">${heroChipsHtml(heroes,'sub',i)}</div>
+      <label class="fld">替补定位（如：替补中单）</label>
+      <input class="pname" id="subtag_${i}" placeholder="替补定位" value="${esc(s.tag||'')}" style="font-size:13px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%;outline:none"/>
+      <label class="fld">出装（6 格）</label>
+      <div class="items">
+        ${(s.items&&s.items.length?s.items:["","","","","",""]).map((it,j)=>`<div class="item" contenteditable="true" data-i="${j}">${esc(it)}</div>`).join('')}
+      </div>
+      <label class="fld">战术思路</label>
+      <textarea class="note" placeholder="替补上场时的打法/针对思路">${esc(s.note||'')}</textarea>`;
+    card.querySelector('.del').onclick=()=>{ state.subs.splice(i,1); save(); renderAll(); };
+    card.querySelector('.swap-btn').onclick=()=>openPickPlayer('sub',i,'替补');
+    card.querySelector('.champ-btn').onclick=()=>openPickChamp('sub',i,'替补');
+    bindChips(card,'sub',i);
+    const stag=card.querySelector('#subtag_'+i); stag.oninput=e=>{ s.tag=e.target.value; save(); };
+    card.querySelectorAll('.item').forEach(el=>{ el.oninput=()=>{ if(!s.items) s.items=["","","","","",""]; s.items[+el.dataset.i]=el.innerText; save(); }; });
+    card.querySelector('.note').oninput=e=>{ s.note=e.target.value; save(); };
+    list.appendChild(card);
+  });
+}
+
+/* ============ 选英雄(BP) ============ */
+function openPickChamp(type,key,roleName){
+  pickTarget={type,key};
+  document.getElementById('pickRoleName').textContent=roleName;
+  document.getElementById('pickMask').hidden=false;
+  document.getElementById('champSearch').value='';
+  renderChampGrid('');
+}
+function closePickChamp(){ document.getElementById('pickMask').hidden=true; pickTarget=null; }
+function renderChampGrid(q){
+  const grid=document.getElementById('champGrid'); grid.innerHTML='';
+  const qq=q.trim().toLowerCase();
+  Object.keys(HERO).filter(en=>!qq || hcn(en).toLowerCase().includes(qq) || en.toLowerCase().includes(qq))
+    .forEach(en=>{
+      const el=document.createElement('div'); el.className='champ';
+      el.innerHTML=`${champAva(en)}<div class="cn">${hcn(en)}</div>`;
+      el.onclick=()=>setChamp(pickTarget.type,pickTarget.key,en);
+      grid.appendChild(el);
+    });
+}
+function setChamp(type,key,en){
+  if(type==='starter') state.starter[key].champ=en;
+  else state.subs[key].champ=en;
+  save(); closePickChamp(); renderAll();
+}
+
+/* ============ 选选手 ============ */
+function openPickPlayer(type,key,roleName){
+  pickTarget={type,key};
+  document.getElementById('playerTargetName').textContent=roleName;
+  document.getElementById('playerMask').hidden=false;
+  renderPlayerGrid();
+}
+function closePickPlayer(){ document.getElementById('playerMask').hidden=true; pickTarget=null; }
+function renderPlayerGrid(){
+  const grid=document.getElementById('playerGrid'); grid.innerHTML='';
+  state.players.forEach((pl,pi)=>{
+    const loc=findLoc(pi);
+    const el=document.createElement('div'); el.className='pitem';
+    const heroesHtml = pl.heroes.length>8
+      ? `<span class="hchip" style="padding:2px 8px">拿手：全 ADC（${pl.heroes.length}）</span>`
+      : pl.heroes.map(h=>`<span class="hchip">${champAva(h)}${hcn(h)}</span>`).join('');
+    el.innerHTML=`<div class="pn">${esc(pl.name)}</div><div class="tagloc">${loc||'待命'}</div><div class="heroes">${heroesHtml}</div>`;
+    el.onclick=()=>{
+      const t=pickTarget; if(!t) return;
+      removePlayerEverywhere(pi);
+      if(t.type==='starter'){ const s=state.starter[t.key]; s.pi=pi; if(!s.champ) s.champ=pl.heroes[0]||null; }
+      else { const s=state.subs[t.key]; s.pi=pi; if(!s.champ) s.champ=pl.heroes[0]||null; }
+      save(); closePickPlayer(); renderAll();
+    };
+    grid.appendChild(el);
+  });
+}
+
+/* ============ 从选手池分配 ============ */
+function openAssign(pi){
+  assignPendingPi=pi;
+  document.getElementById('assignName').textContent = "· "+state.players[pi].name;
+  document.getElementById('assignMask').hidden=false;
+}
+function closeAssign(){ document.getElementById('assignMask').hidden=true; assignPendingPi=null; }
+function doAssign(r){
+  const pi=assignPendingPi; if(pi==null) return;
+  const pl=state.players[pi];
+  removePlayerEverywhere(pi);
+  if(r==='sub'){ state.subs.push({pi,champ:pl.heroes[0]||null,items:["","","","","",""],note:"",tag:""}); }
+  else { const s=state.starter[r]; s.pi=pi; if(!s.champ) s.champ=pl.heroes[0]||null; }
+  save(); closeAssign(); renderAll();
+}
+
+/* ============ 工具 ============ */
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+function renderAll(){ renderBoard(); renderPool(); renderCards(); }
+
+/* ============ 事件 ============ */
+document.getElementById('tabStarter').onclick=()=>switchTeam('starter');
+document.getElementById('tabSub').onclick=()=>switchTeam('sub');
+function switchTeam(t){
+  currentTeam=t;
+  document.getElementById('tabStarter').classList.toggle('active',t==='starter');
+  document.getElementById('tabSub').classList.toggle('active',t==='sub');
+  document.getElementById('cardsWrap').hidden=(t!=='starter');
+  document.getElementById('subsWrap').hidden=(t!=='sub');
+  renderCards();
+}
+document.getElementById('champSearch').oninput=e=>renderChampGrid(e.target.value);
+document.getElementById('pickClose').onclick=closePickChamp;
+document.getElementById('pickMask').onclick=e=>{ if(e.target.id==='pickMask') closePickChamp(); };
+document.getElementById('playerClose').onclick=closePickPlayer;
+document.getElementById('playerMask').onclick=e=>{ if(e.target.id==='playerMask') closePickPlayer(); };
+document.getElementById('assignClose').onclick=closeAssign;
+document.getElementById('assignMask').onclick=e=>{ if(e.target.id==='assignMask') closeAssign(); };
+document.querySelectorAll('.abtn').forEach(b=> b.onclick=()=>doAssign(b.dataset.r));
+
+document.getElementById('addSub').onclick=()=>{ state.subs.push({pi:null,champ:null,items:["","","","","",""],note:"",tag:""}); save(); renderSubs(); };
+
+document.getElementById('btnReset').onclick=()=>{
+  if(confirm('确定清空所有阵容（选手池保留）？')){
+    state=defaultState(); save(); renderAll(); switchTeam('starter');
+  }
+};
+document.getElementById('btnExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='GGBAO阵容_'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+};
+document.getElementById('btnImport').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ state=mergeDefaults(JSON.parse(rd.result)); save(); renderAll(); switchTeam('starter'); alert('导入成功'); }
+    catch(err){ alert('文件格式错误'); } };
+  rd.readAsText(f); e.target.value='';
+};
+
+/* ============ 初始化 ============ */
+renderAll();
+cloudLoad().then(()=> setInterval(poll,5000));
+</script>
+</body>
+</html>
