@@ -1,0 +1,148 @@
+:root {
+  --bg: #fff7f0;
+  --card: #ffffff;
+  --primary: #ff7a45;
+  --primary-d: #f5612a;
+  --text: #2b2b2b;
+  --sub: #9a9a9a;
+  --line: #f0e6dd;
+  --ok: #2bb673;
+  --ok-bg: #e9f9f0;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+}
+body { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 32px; }
+
+/* 顶部栏 */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #ff9a6c, #ff7a45);
+  color: #fff;
+}
+.topbar .title { font-size: 18px; font-weight: 700; }
+.role-badge {
+  border: none; background: rgba(255,255,255,.22); color: #fff;
+  padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer;
+}
+
+/* 角色遮罩 */
+.mask {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.mask-card {
+  background: #fff; border-radius: 18px; padding: 28px 22px; width: 100%; max-width: 340px;
+  text-align: center;
+}
+.mask-card h2 { margin: 0 0 4px; font-size: 22px; }
+.mask-card .sub { margin: 0 0 22px; color: var(--sub); font-size: 13px; }
+.role-btn {
+  display: block; width: 100%; margin-bottom: 14px; padding: 18px;
+  border: 2px solid var(--line); border-radius: 14px; background: #fff;
+  font-size: 18px; font-weight: 700; cursor: pointer; line-height: 1.4;
+}
+.role-btn span { font-size: 13px; font-weight: 400; color: var(--sub); }
+.role-btn.husband:active { border-color: var(--primary); background: #fff3ec; }
+.role-btn.wife:active { border-color: #ff5fa2; background: #fff0f6; }
+
+/* 视图与卡片 */
+.view { padding: 14px; }
+.card {
+  background: var(--card); border-radius: 16px; padding: 16px;
+  margin-bottom: 14px; box-shadow: 0 2px 10px rgba(255,122,69,.06);
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-weight: 700; margin-bottom: 12px;
+}
+.card-head .count, .summary .count { color: var(--primary); font-size: 14px; }
+.field-label { font-size: 13px; color: var(--sub); }
+
+/* 日期 */
+.date-input {
+  width: 100%; margin-top: 8px; padding: 12px; font-size: 16px;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff;
+}
+.date-tip { margin-top: 6px; font-size: 12px; color: var(--sub); }
+
+/* 选菜列表 */
+.pick-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.pick-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer;
+}
+.pick-item.checked { border-color: var(--primary); background: #fff7f2; }
+.pick-item .box {
+  width: 22px; height: 22px; border-radius: 6px; border: 2px solid #d9cfc6;
+  flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;
+}
+.pick-item.checked .box { background: var(--primary); border-color: var(--primary); }
+.pick-item .name { font-size: 16px; }
+
+/* 按钮 */
+.primary-btn {
+  width: 100%; padding: 14px; border: none; border-radius: 12px;
+  background: var(--primary); color: #fff; font-size: 17px; font-weight: 700; cursor: pointer;
+}
+.primary-btn:active { background: var(--primary-d); }
+.ghost-btn {
+  padding: 12px 16px; border: 1px solid var(--primary); border-radius: 10px;
+  background: #fff; color: var(--primary); font-weight: 700; cursor: pointer;
+}
+.text-input {
+  flex: 1; padding: 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 15px;
+}
+.add-row { display: flex; gap: 10px; margin-bottom: 12px; }
+
+/* 菜品库管理 */
+.manage-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 10px; background: #fff3ec; border-radius: 20px; font-size: 14px;
+}
+.chip .del {
+  width: 18px; height: 18px; border-radius: 50%; border: none;
+  background: #ffd2bd; color: #fff; font-size: 12px; line-height: 1; cursor: pointer;
+}
+
+/* 老婆视图 */
+.tabbar { display: flex; gap: 10px; margin-bottom: 12px; }
+.tab {
+  flex: 1; padding: 10px; border: none; border-radius: 10px; background: #fff;
+  color: var(--sub); font-weight: 700; cursor: pointer;
+}
+.tab.active { background: var(--primary); color: #fff; }
+.summary { display: flex; align-items: center; justify-content: space-between; font-weight: 700; }
+.order-list { display: flex; flex-direction: column; gap: 10px; }
+.order-item {
+  display: flex; align-items: center; gap: 10px; padding: 14px;
+  border: 1px solid var(--line); border-radius: 12px; cursor: pointer;
+}
+.order-item .dot {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid #d9cfc6; flex: none;
+}
+.order-item.ready { background: var(--ok-bg); border-color: var(--ok); }
+.order-item.ready .dot { background: var(--ok); border-color: var(--ok); }
+.order-item .name { font-size: 16px; }
+.order-item.ready .name { color: var(--ok); }
+.order-item .state { margin-left: auto; font-size: 13px; color: var(--sub); }
+.order-item.ready .state { color: var(--ok); }
+
+.empty { color: var(--sub); text-align: center; padding: 18px 0; font-size: 14px; }
+.hint { text-align: center; color: var(--sub); font-size: 12px; margin-top: 4px; }
+
+/* toast */
+.toast {
+  position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
+  background: rgba(0,0,0,.8); color: #fff; padding: 10px 18px; border-radius: 20px;
+  font-size: 14px; z-index: 99;
+}

@@ -1,0 +1,14 @@
+# Render 部署配置（方案 B）
+# 在 Render 导入 GitHub 仓库后，本文件可让部署一键成型。
+services:
+  - type: web
+    name: family-order-h5
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: "echo skip-build"
+    startCommand: "node server.js"
+    healthCheckPath: "/"
+    envVars:
+      - key: PORT
+        value: "10000"

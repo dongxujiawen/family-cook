@@ -1,0 +1,13 @@
+{
+  "name": "family-order-h5",
+  "version": "1.0.0",
+  "description": "家庭点菜 H5 工作台（老公点菜 / 老婆查看），零依赖 Node 服务",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "private": true
+}

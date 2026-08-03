@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>家庭点菜</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 顶部栏 -->
+  <header class="topbar">
+    <div class="title">🍳 家庭点菜</div>
+    <button id="switchRole" class="role-badge" hidden></button>
+  </header>
+
+  <!-- 角色选择遮罩 -->
+  <div id="roleMask" class="mask">
+    <div class="mask-card">
+      <h2>你是谁？</h2>
+      <p class="sub">选一次记住，随时可切换</p>
+      <button class="role-btn husband" data-role="husband">👨 我是老公<br /><span>每天来点菜</span></button>
+      <button class="role-btn wife" data-role="wife">👩 我是老婆<br /><span>查看今天点啥</span></button>
+    </div>
+  </div>
+
+  <!-- 老公视图 -->
+  <main id="husbandView" class="view" hidden>
+    <section class="card">
+      <label class="field-label">点哪一天的菜</label>
+      <input type="date" id="orderDate" class="date-input" />
+      <div class="date-tip" id="dateTip"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <span>今天点这些菜</span>
+        <span class="count" id="pickCount">0 道</span>
+      </div>
+      <div id="dishPickList" class="pick-list">
+        <div class="empty">还没有菜品，先在下面添加 👇</div>
+      </div>
+      <button id="saveOrder" class="primary-btn">保存点菜</button>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><span>菜品库管理</span></div>
+      <div class="add-row">
+        <input type="text" id="newDish" class="text-input" placeholder="加个常吃的菜，如 番茄炒蛋" />
+        <button id="addDish" class="ghost-btn">添加</button>
+      </div>
+      <div id="dishManageList" class="manage-list"></div>
+    </section>
+  </main>
+
+  <!-- 老婆视图 -->
+  <main id="wifeView" class="view" hidden>
+    <div class="tabbar">
+      <button class="tab active" data-wifedate="today">今天</button>
+      <button class="tab" data-wifedate="tomorrow">明天</button>
+    </div>
+    <section class="card summary" id="wifeSummary">
+      <span id="wifeDateLabel">今天</span>
+      <span class="count" id="readyCount">0/0 已准备</span>
+    </section>
+    <section class="card">
+      <div id="wifeOrderList" class="order-list">
+        <div class="empty">老公还没点菜哦~</div>
+      </div>
+    </section>
+    <p class="hint">点一下菜名可切换「已准备 / 未准备」</p>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
