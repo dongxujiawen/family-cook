@@ -72,6 +72,8 @@
       role = b.dataset.role;
       localStorage.setItem(ROLE_KEY, role);
       applyRole();
+      // 防御性延迟：确保遮罩一定关闭
+      setTimeout(() => { if (role) $('#roleMask').hidden = true; }, 50);
     });
   });
   $('#switchRole').addEventListener('click', () => {
