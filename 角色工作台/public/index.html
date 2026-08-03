@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>我的角色收藏</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#181b22; --panel2:#222631; --line:#2c313c;
+    --gold:#c8aa6e; --teal:#39c5bb; --red:#e0556b; --text:#eef1f6; --muted:#8b93a3;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:16px;max-width:900px;margin:0 auto;padding-bottom:90px}
+  header{display:flex;align-items:center;justify-content:space-between;margin:4px 0 16px}
+  header h1{font-size:20px;margin:0;letter-spacing:1px}
+  header h1 small{color:var(--gold);font-weight:400}
+  .fab{position:fixed;right:18px;bottom:22px;background:var(--gold);color:#1a1304;border:none;border-radius:50px;padding:13px 20px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(200,170,110,.35);z-index:30}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;transition:.15s}
+  .card:active{transform:scale(.98)}
+  .thumb{aspect-ratio:3/4;background:linear-gradient(135deg,#222631,#2c313c);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;position:relative}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .badge{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 7px;border-radius:20px}
+  .meta{padding:10px 12px}
+  .meta .nm{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meta .src{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;line-height:1.8}
+  .empty b{color:var(--gold)}
+
+  /* 遮罩弹窗 */
+  .mask{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+  .mask[hidden]{display:none!important}
+  .sheet{background:var(--panel);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+  @media(min-width:600px){.mask{align-items:center}.sheet{border-radius:18px}}
+  .sheet h3{margin:0 0 14px;font-size:17px;color:var(--gold)}
+  label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
+  input,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:11px 12px;font-size:15px;outline:none;font-family:inherit}
+  input:focus,textarea:focus{border-color:var(--teal)}
+  textarea{resize:vertical;min-height:70px}
+  .row{display:flex;gap:10px;margin-top:18px}
+  .btn{flex:1;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:600;cursor:pointer}
+  .btn.primary{background:var(--gold);color:#1a1304}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .btn.danger{background:transparent;color:var(--red);border:1px solid var(--red)}
+
+  /* 详情 */
+  .back{background:none;border:none;color:var(--teal);font-size:15px;cursor:pointer;padding:0;margin-bottom:10px}
+  .detail-head{display:flex;gap:14px;align-items:flex-start}
+  .detail-head .info{flex:1;min-width:0}
+  .detail-head .info h2{margin:0 0 4px;font-size:22px}
+  .detail-head .info .src{color:var(--gold);font-size:13px}
+  .detail-head .info .note{color:var(--muted);font-size:13px;margin-top:8px;line-height:1.6;white-space:pre-wrap}
+  .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+  .media-item{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
+  .media-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .media-item video{width:100%;display:block;background:#000;max-height:260px}
+  .media-item .fname{font-size:11px;color:var(--muted);padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .media-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:15px;cursor:pointer;line-height:1}
+  .upload-row{margin-top:16px;display:flex;gap:10px}
+  .hint{font-size:12px;color:var(--muted);text-align:center;padding:12px}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--panel2);color:var(--muted);margin-left:6px}
+</style>
+</head>
+<body>
+  <header>
+    <h1>我的角色<small>收藏</small></h1>
+    <span class="tag" id="countTag"></span>
+  </header>
+
+  <div id="listView"></div>
+
+  <!-- 新增角色弹窗 -->
+  <div class="mask" id="addMask" hidden>
+    <div class="sheet">
+      <h3>新增角色</h3>
+      <label>角色名 *</label>
+      <input id="addName" placeholder="如：亚索、雷电将军…" maxlength="40" />
+      <label>出处 / 来源</label>
+      <input id="addSource" placeholder="如：英雄联盟、原神…" maxlength="40" />
+      <label>备注</label>
+      <textarea id="addNote" placeholder="随便写点什么…"></textarea>
+      <div class="row">
+        <button class="btn ghost" id="addCancel">取消</button>
+        <button class="btn primary" id="addOk">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 详情弹窗 -->
+  <div class="mask" id="detailMask" hidden>
+    <div class="sheet">
+      <button class="back" id="detailBack">‹ 返回列表</button>
+      <div id="detailBody"></div>
+    </div>
+  </div>
+
+  <button class="fab" id="addFab">＋ 新增角色</button>
+
+<script>
+const API = '/api/characters';
+let detailId = null;
+
+function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function loadList(){
+  try{
+    const res = await fetch(API);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const chars = await res.json();
+    document.getElementById('countTag').textContent = chars.length ? chars.length+' 个角色' : '';
+    const box = document.getElementById('listView');
+  if(!chars.length){
+    box.innerHTML = '<div class="empty">还没有角色<br>点右下角 <b>＋ 新增角色</b>，加上你喜欢的角色吧</div>';
+    return;
+  }
+  box.innerHTML = '<div class="grid">'+chars.map(c=>{
+    const cover = (c.media||[]).find(m=>m.type==='image');
+    const n = (c.media||[]).length;
+    return `<div class="card" data-id="${c.id}">
+      <div class="thumb">${cover?`<img src="/uploads/${encodeURIComponent(cover.file)}" alt="">`:'暂无照片'}
+        ${n?`<span class="badge">${n} 媒体</span>`:''}</div>
+      <div class="meta"><div class="nm">${esc(c.name)}</div><div class="src">${esc(c.source)||'未填出处'}</div></div>
+    </div>`;
+  }).join('')+'</div>';
+  box.querySelectorAll('.card').forEach(el=> el.onclick=()=> openDetail(el.dataset.id));
+  }catch(e){
+    document.getElementById('countTag').textContent='';
+    document.getElementById('listView').innerHTML='<div class="empty">⚠️ 无法连接本地服务<br><br>要正常使用请：<br>1) 在「角色工作台」目录运行 <b>node server.js</b><br>2) 用浏览器打开 <b>http://localhost:5050</b><br>　（手机同 WiFi 用电脑 IP:5050）<br><br>直接双击本文件、或在预览面板里点，<br>是保存不了数据的</div>';
+  }
+}
+
+async function openDetail(id){
+  detailId = id;
+  const res = await fetch(API);
+  const chars = await res.json();
+  const c = chars.find(x=>x.id===id);
+  if(!c){ return; }
+  const media = c.media||[];
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-head">
+      <div class="info">
+        <h2>${esc(c.name)}</h2>
+        ${c.source?`<div class="src">出处：${esc(c.source)}</div>`:''}
+        ${c.note?`<div class="note">${esc(c.note)}</div>`:''}
+      </div>
+    </div>
+    <div class="upload-row">
+      <button class="btn ghost" id="upBtn" style="flex:1">＋ 上传照片/视频</button>
+      <button class="btn danger" id="delChar" style="flex:0 0 auto">删除角色</button>
+    </div>
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple hidden />
+    <div class="media-grid" id="mediaGrid">
+      ${media.length? media.map(m=>`
+        <div class="media-item">
+          <button class="media-del" data-f="${encodeURIComponent(m.file)}">×</button>
+          ${m.type==='video'?`<video src="/uploads/${encodeURIComponent(m.file)}" controls preload="metadata"></video>`
+            : m.type==='image'?`<img src="/uploads/${encodeURIComponent(m.file)}" alt="${esc(m.name)}" />`
+            : `<a href="/uploads/${encodeURIComponent(m.file)}" style="color:var(--teal);padding:14px;display:block;word-break:break-all">${esc(m.name)}</a>`}
+          <div class="fname">${esc(m.name)}</div>
+        </div>`).join('') : '<div class="hint">还没有照片/视频，点上方按钮上传</div>'}
+    </div>`;
+  document.getElementById('upBtn').onclick = ()=> document.getElementById('fileInput').click();
+  document.getElementById('fileInput').onchange = e=> uploadMedia(e.target.files);
+  document.getElementById('delChar').onclick = ()=>{
+    if(confirm('确定删除「'+c.name+'」及其所有照片视频？')) deleteChar(id);
+  };
+  document.querySelectorAll('.media-del').forEach(b=> b.onclick = ()=> deleteMedia(id, decodeURIComponent(b.dataset.f)));
+  document.getElementById('detailMask').hidden = false;
+}
+
+async function uploadMedia(files){
+  if(!files || !files.length) return;
+  const fd = new FormData();
+  for(const f of files) fd.append('file', f);
+  const btn = document.getElementById('upBtn');
+  btn.textContent = '上传中…';
+  try{
+    const res = await fetch(API+'/'+detailId+'/media', {method:'POST', body:fd});
+    if(!res.ok) throw new Error('上传失败');
+    await openDetail(detailId);
+  }catch(e){ alert('上传失败：'+e.message); btn.textContent='＋ 上传照片/视频'; }
+}
+
+async function deleteMedia(id, file){
+  if(!confirm('删除这个媒体？')) return;
+  await fetch(API+'/'+id+'/media/'+encodeURIComponent(file), {method:'DELETE'});
+  await openDetail(id);
+}
+async function deleteChar(id){
+  await fetch(API+'/'+id, {method:'DELETE'});
+  document.getElementById('detailMask').hidden = true;
+  loadList();
+}
+
+/* 新增 */
+document.getElementById('addFab').onclick = ()=>{
+  document.getElementById('addName').value='';
+  document.getElementById('addSource').value='';
+  document.getElementById('addNote').value='';
+  document.getElementById('addMask').hidden=false;
+  setTimeout(()=>document.getElementById('addName').focus(),100);
+};
+document.getElementById('addCancel').onclick = ()=> document.getElementById('addMask').hidden=true;
+document.getElementById('addMask').onclick = e=>{ if(e.target.id==='addMask') document.getElementById('addMask').hidden=true; };
+document.getElementById('addOk').onclick = async ()=>{
+  const name = document.getElementById('addName').value.trim();
+  if(!name){ alert('角色名不能为空'); return; }
+  const btn = document.getElementById('addOk');
+  btn.textContent='保存中…';
+  try{
+    const r = await fetch(API, {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, source:document.getElementById('addSource').value.trim(), note:document.getElementById('addNote').value.trim()})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    document.getElementById('addMask').hidden=true;
+    loadList();
+  }catch(e){
+    alert('保存失败：连不上本地服务\n请先运行 node server.js，再用浏览器打开 http://localhost:5050');
+    btn.textContent='保存';
+  }
+};
+document.getElementById('detailBack').onclick = ()=> document.getElementById('detailMask').hidden=true;
+document.getElementById('detailMask').onclick = e=>{ if(e.target.id==='detailMask') document.getElementById('detailMask').hidden=true; };
+
+loadList();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "name": "角色工作台",
+  "version": "1.0.0",
+  "private": true,
+  "description": "本地局域网角色收藏工作台（照片/视频），手机同 WiFi 可访问",
+  "scripts": { "start": "node server.js" }
+}
