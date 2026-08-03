@@ -80,9 +80,12 @@
   label.fld{font-size:11px;color:var(--muted);display:block;margin:8px 0 4px}
   .items{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
   .item{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:6px;background:var(--panel2);
-    font-size:10px;color:var(--muted);display:flex;align-items:center;justify-content:center;text-align:center;
-    padding:2px;outline:none;word-break:break-all;cursor:text}
-  .item:focus{border-color:var(--teal);color:var(--text)}
+    font-size:10px;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:2px;overflow:hidden;cursor:pointer;transition:.12s}
+  .item:hover{border-color:var(--teal);box-shadow:0 0 8px rgba(10,200,185,.35)}
+  .item img{width:auto;height:auto;max-width:84%;max-height:34px;object-fit:contain;background:#0a1428;border-radius:4px;margin-bottom:2px}
+  .item .cn{font-size:9px;line-height:1.1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .item .ph{font-size:18px;color:var(--muted)}
   textarea.note{width:100%;min-height:54px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;
     color:var(--text);padding:8px;font-size:12px;resize:vertical;outline:none;font-family:inherit}
   textarea.note:focus{border-color:var(--teal)}
@@ -120,6 +123,19 @@
   .champ .empty-ava{width:48px;height:48px;border-radius:8px;background:#0a1428;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;margin:0 auto}
   .closex{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;margin-left:6px}
   .hint{font-size:11px;color:var(--muted);padding:0 16px 10px}
+
+  /* 选出装弹窗 */
+  .clearx{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;font-size:11px;padding:3px 9px;cursor:pointer}
+  .clearx:hover{border-color:var(--red);color:var(--red)}
+  .cats{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px 0}
+  .cat{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;transition:.12s}
+  .cat:hover{border-color:var(--teal)}
+  .cat.active{background:var(--gold);color:#1a1304;border-color:var(--gold);font-weight:700}
+  .grid-item{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:8px;padding:14px;overflow-y:auto}
+  .itemcell{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;cursor:pointer;transition:.12s}
+  .itemcell:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .itemcell img{width:42px;height:42px;border-radius:8px;object-fit:cover;background:#0a1428}
+  .itemcell .cn{font-size:11px;margin-top:4px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* 选选手弹窗 */
   .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:14px;overflow-y:auto}
@@ -226,6 +242,22 @@
       <div class="abtn" data-r="sup">辅助</div>
       <div class="abtn sub" data-r="sub">替补席</div>
     </div>
+  </div>
+</div>
+
+<!-- 选出装弹窗 -->
+<div class="mask" id="itemMask" hidden>
+  <div class="picker">
+    <div class="ph">
+      <span class="t">🛡 选出装</span>
+      <span class="src">第 <b id="itemSlotLabel" style="color:var(--teal)"></b> 件装备</span>
+      <button class="clearx" id="itemClear">清空该格</button>
+      <input class="search" id="itemSearch" placeholder="搜索装备…" />
+      <button class="closex" id="itemClose">×</button>
+    </div>
+    <div class="cats" id="itemCats"></div>
+    <div class="hint">点击装备图标即可填入该格（图标来自 Riot Data Dragon 官方 CDN）</div>
+    <div class="grid-item" id="itemGrid"></div>
   </div>
 </div>
 
@@ -436,16 +468,16 @@ function buildStarterCard(key,roleName){
     </div>
     <div class="champ-name ${d.champ?'':'empty'}">出战：${champCn}</div>
     <div class="heroes" id="chips_${key}">${heroChipsHtml(pl.heroes,'starter',key)}</div>
-    <label class="fld">出装（6 格）</label>
+    <label class="fld">出装（点击格子选择装备）</label>
     <div class="items">
-      ${d.items.map((it,i)=>`<div class="item" contenteditable="true" data-i="${i}">${esc(it)}</div>`).join('')}
+      ${d.items.map((it,i)=>`<div class="item" data-i="${i}" data-type="starter" data-key="${key}">${itemSlotHtml(it)}</div>`).join('')}
     </div>
     <label class="fld">战术思路</label>
     <textarea class="note" placeholder="如：前期稳住，6 级找机会 gank 下路…">${esc(d.note)}</textarea>`;
   card.querySelector('.swap-btn').onclick=e=>{ e.stopPropagation(); openPickPlayer('starter',key,roleName); };
   card.querySelector('.champ-btn').onclick=e=>{ e.stopPropagation(); openPickChamp('starter',key,roleName); };
   bindChips(card,'starter',key);
-  card.querySelectorAll('.item').forEach(el=>{ el.oninput=()=>{ d.items[+el.dataset.i]=el.innerText; save(); }; });
+  card.querySelectorAll('.item').forEach(el=>{ el.onclick=()=>openPickItem('starter',key,+el.dataset.i); });
   card.querySelector('.note').oninput=e=>{ d.note=e.target.value; save(); };
   return card;
 }
@@ -475,9 +507,9 @@ function renderSubs(){
       <div class="heroes">${heroChipsHtml(heroes,'sub',i)}</div>
       <label class="fld">替补定位（如：替补中单）</label>
       <input class="pname" id="subtag_${i}" placeholder="替补定位" value="${esc(s.tag||'')}" style="font-size:13px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%;outline:none"/>
-      <label class="fld">出装（6 格）</label>
+      <label class="fld">出装（点击格子选择装备）</label>
       <div class="items">
-        ${(s.items&&s.items.length?s.items:["","","","","",""]).map((it,j)=>`<div class="item" contenteditable="true" data-i="${j}">${esc(it)}</div>`).join('')}
+        ${(s.items&&s.items.length?s.items:["","","","","",""]).map((it,j)=>`<div class="item" data-i="${j}" data-type="sub" data-key="${i}">${itemSlotHtml(it)}</div>`).join('')}
       </div>
       <label class="fld">战术思路</label>
       <textarea class="note" placeholder="替补上场时的打法/针对思路">${esc(s.note||'')}</textarea>`;
@@ -486,7 +518,7 @@ function renderSubs(){
     card.querySelector('.champ-btn').onclick=()=>openPickChamp('sub',i,'替补');
     bindChips(card,'sub',i);
     const stag=card.querySelector('#subtag_'+i); stag.oninput=e=>{ s.tag=e.target.value; save(); };
-    card.querySelectorAll('.item').forEach(el=>{ el.oninput=()=>{ if(!s.items) s.items=["","","","","",""]; s.items[+el.dataset.i]=el.innerText; save(); }; });
+    card.querySelectorAll('.item').forEach(el=>{ el.onclick=()=>openPickItem('sub',i,+el.dataset.i); });
     card.querySelector('.note').oninput=e=>{ s.note=e.target.value; save(); };
     list.appendChild(card);
   });
@@ -586,6 +618,11 @@ document.getElementById('assignClose').onclick=closeAssign;
 document.getElementById('assignMask').onclick=e=>{ if(e.target.id==='assignMask') closeAssign(); };
 document.querySelectorAll('.abtn').forEach(b=> b.onclick=()=>doAssign(b.dataset.r));
 
+document.getElementById('itemSearch').oninput=e=>renderItemPicker(e.target.value);
+document.getElementById('itemClose').onclick=closePickItem;
+document.getElementById('itemClear').onclick=clearItemSlot;
+document.getElementById('itemMask').onclick=e=>{ if(e.target.id==='itemMask') closePickItem(); };
+
 document.getElementById('addSub').onclick=()=>{ state.subs.push({pi:null,champ:null,items:["","","","","",""],note:"",tag:""}); save(); renderSubs(); };
 
 document.getElementById('btnReset').onclick=()=>{
@@ -607,8 +644,91 @@ document.getElementById('fileInput').onchange=e=>{
   rd.readAsText(f); e.target.value='';
 };
 
+/* ============ 装备数据（动态加载 Data Dragon，教练点选出装） ============ */
+const ITEM_VER = "14.24.1";
+const ITEM_JSON = `https://ddragon.leagueoflegends.com/cdn/${ITEM_VER}/data/zh_CN/item.json`;
+const ITEM_ICON = `https://ddragon.leagueoflegends.com/cdn/${ITEM_VER}/img/item/`;
+let ITEMS = {};            // id -> {id,name,tags,plaintext}
+let itemReady = false;
+let currentItemFilter = 'all';
+const ITEM_CATS = [
+  {key:'all',name:'全部'},{key:'Boots',name:'鞋靴'},{key:'Fighter',name:'战士'},
+  {key:'Tank',name:'坦克'},{key:'Jungle',name:'打野'},{key:'Mage',name:'法师'},
+  {key:'Marksman',name:'射手'},{key:'Support',name:'辅助'}
+];
+async function loadItems(){
+  try{
+    const r = await fetch(ITEM_JSON); const d = await r.json(); const data = d.data;
+    for(const id in data){
+      const it = data[id];
+      if(it.gold && it.gold.purchasable === false) continue;
+      const tags = it.tags || [];
+      if(tags.includes('Consumable')||tags.includes('Trinket')||tags.includes('Potion')||tags.includes('VisionWard')) continue;
+      ITEMS[id] = { id, name: it.name, tags, plaintext: it.plaintext||'' };
+    }
+    itemReady = true;
+    if(document.getElementById('itemSearch')) renderItemPicker(document.getElementById('itemSearch').value);
+    renderAll(); // 装备就绪后刷新已渲染的格子（显示图标）
+  }catch(e){ itemReady = false; }
+}
+function itemSlotHtml(val){
+  if(!val) return '<span class="ph">＋</span>';
+  const it = ITEMS[val];
+  if(it) return `<img src="${ITEM_ICON}${val}.png" alt=""><div class="cn">${esc(it.name)}</div>`;
+  return `<div class="cn">${esc(val)}</div>`; // 兼容旧版手填文本
+}
+function renderItemCats(){
+  const wrap=document.getElementById('itemCats'); if(!wrap) return; wrap.innerHTML='';
+  ITEM_CATS.forEach(c=>{
+    const b=document.createElement('div'); b.className='cat'+(c.key===currentItemFilter?' active':'');
+    b.textContent=c.name; b.onclick=()=>{ currentItemFilter=c.key; renderItemCats(); renderItemPicker(document.getElementById('itemSearch').value); };
+    wrap.appendChild(b);
+  });
+}
+function renderItemPicker(q){
+  const grid=document.getElementById('itemGrid'); if(!grid) return;
+  if(!itemReady){ grid.innerHTML='<div class="hint" style="padding:20px">装备加载中…</div>'; return; }
+  grid.innerHTML='';
+  const qq=q.trim().toLowerCase();
+  Object.values(ITEMS).filter(it=>{
+    if(currentItemFilter!=='all' && !it.tags.includes(currentItemFilter)) return false;
+    if(!qq) return true;
+    return it.name.toLowerCase().includes(qq) || (it.plaintext||'').toLowerCase().includes(qq) || it.id.includes(qq);
+  }).forEach(it=>{
+    const el=document.createElement('div'); el.className='itemcell';
+    el.innerHTML=`<img src="${ITEM_ICON}${it.id}.png" alt=""><div class="cn">${esc(it.name)}</div>`;
+    el.onclick=()=>setItem(it.id);
+    grid.appendChild(el);
+  });
+}
+let itemTarget=null; // {type,key,slot}
+function openPickItem(type,key,slot){
+  itemTarget={type,key,slot};
+  document.getElementById('itemSlotLabel').textContent=(slot+1);
+  document.getElementById('itemMask').hidden=false;
+  document.getElementById('itemSearch').value='';
+  currentItemFilter='all'; renderItemCats(); renderItemPicker('');
+}
+function closePickItem(){ document.getElementById('itemMask').hidden=true; itemTarget=null; }
+function setItem(id){
+  if(!itemTarget) return;
+  const {type,key,slot}=itemTarget;
+  const d = type==='starter'? state.starter[key] : state.subs[key];
+  if(!d.items) d.items=["","","","","",""];
+  d.items[slot]=id;
+  save(); closePickItem(); renderAll();
+}
+function clearItemSlot(){
+  if(!itemTarget) return;
+  const {type,key,slot}=itemTarget;
+  const d = type==='starter'? state.starter[key] : state.subs[key];
+  if(d.items) d.items[slot]="";
+  save(); closePickItem(); renderAll();
+}
+
 /* ============ 初始化 ============ */
 renderAll();
+loadItems();
 cloudLoad().then(()=> setInterval(poll,5000));
 </script>
 </body>
